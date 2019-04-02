@@ -17,7 +17,7 @@ bool wasPressed = false;
 
 //led variables
 int ledState = 0;   // the led starts in no state
-int ledPin = 7;     //pin the led is attached to
+int ledPin = 5;     //pin the led is attached to
 
 void setup(){
     Serial.begin(9600);
@@ -52,9 +52,6 @@ void loop(){
     if(wasPressed == true && isPressed == false){ //if user let go
         performAction(time - timeOfPress);
     }
-
-    
-    Serial.print("     ");
     
     Serial.println(ledState);
 

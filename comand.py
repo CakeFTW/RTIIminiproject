@@ -95,7 +95,7 @@ while 1:
         doneSending = True
     
     
-    if "getTabs" in str(a):
+    if "gettabs" in str(a):
         listOfTabs = getListOfTabs()
 
     if msgToBeSent == []:

@@ -1,5 +1,5 @@
 {
     "board": "arduino:avr:uno",
-    "sketch": "serialTest.ino",
+    "sketch": "RTII_miniproject\\RTII_miniproject.ino",
     "port": "COM240"
 }
