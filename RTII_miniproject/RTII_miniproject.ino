@@ -10,10 +10,13 @@
 
 //pin
 CapacitiveSensor cs = CapacitiveSensor(2,4);
+int i = 0;
 
 //declaration of variables
 unsigned long timeOfPress = 0;
 bool wasPressed = false;
+
+bool isReceiving = false;
 
 //led variables
 int ledState = 0;   // the led starts in no state
@@ -28,6 +31,8 @@ void setup(){
 
 void loop(){
     //reset variabels
+    i++;
+    //Serial.print(String(i) + " - ");
     ledState = 0;
     bool isPressed = false;
 
@@ -42,22 +47,36 @@ void loop(){
         isPressed = true;
     }
 
-
-    if(isPressed == true){
-        Serial.print(time - timeOfPress);
-    }
     if(isPressed == true && wasPressed == false){//if being pressed for the first time
         timeOfPress = time;
     }
+
     if(wasPressed == true && isPressed == false){ //if user let go
         performAction(time - timeOfPress);
     }
-    
-    Serial.println(ledState);
 
     led(ledState); //set the led to active pattern
 
     wasPressed = isPressed;
+
+    String msg = "Serial.readString()";
+    //Serial.println(msg);
+
+
+    digitalWrite(8,LOW);
+
+    if(isReceiving){
+        digitalWrite(8,HIGH);
+    }
+
+    if( msg == "done"){
+        isReceiving = false;
+    }
+
+    if( msg == "sending"){
+        isReceiving = true;
+    }
+    
 }
 
 void led(int state){
@@ -72,5 +91,10 @@ void performAction(unsigned long duration){ //perform action based on duration o
         digitalWrite(8, HIGH);
     }else if(duration > 1500){
         digitalWrite(9,HIGH);
+        receiveList();
     }
+}
+
+void receiveList(){
+    Serial.print("gettabs");
 }
