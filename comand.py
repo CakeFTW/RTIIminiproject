@@ -83,24 +83,18 @@ doneSending = False
 msgToBeSent = []
 
 while 1:
-    a = ser.read_all().decode()
-    time.sleep(1)
-    print(a + "               asd")
-
-    if '1' in a and not doneSending:
-        msgToBeSent.append('save')
-        msgToBeSent.append("oit mate")
-        msgToBeSent.append('done sending')
-        ser.write(bytes(str(msgToBeSent[0]).encode("ascii")))
-        doneSending = True
-    
+    a = ser.read_until(b'over').decode()
+    if(a != ""):
+        print("Received : " + a)
     
     if "gettabs" in str(a):
         msgToBeSent.append('sending')
+        ser.write(bytes(str(msgToBeSent[0]).encode("ascii")))
         print("begining to send")
-        msgToBeSent.append('link 1')
-        msgToBeSent.append('link 2')
+        for s in inputTest:
+            msgToBeSent.append(s)
         msgToBeSent.append('done')
+        msgToBeSent.append('read')
 
 
     if msgToBeSent == []:
@@ -109,7 +103,7 @@ while 1:
     if msgToBeSent[0] in str(a):
         msgToBeSent.pop(0)
         
-        if(msgToBeSent != []):
+        if(msgToBeSent == []):
             continue
 
         ser.write(bytes(str(msgToBeSent[0]).encode("ascii")))

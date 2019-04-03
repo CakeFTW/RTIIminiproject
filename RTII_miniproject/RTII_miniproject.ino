@@ -5,13 +5,13 @@
 
 //libraries 
 #include <CapacitiveSensor.h> // to use pins as capacitative touch sensors
-
+#include <EEPROM.h>
 
 
 //pin
 CapacitiveSensor cs = CapacitiveSensor(2,4);
 int i = 0;
-
+String memo = "";
 //declaration of variables
 unsigned long timeOfPress = 0;
 bool wasPressed = false;
@@ -59,14 +59,15 @@ void loop(){
 
     wasPressed = isPressed;
 
-    String msg = "Serial.readString()";
-    //Serial.println(msg);
+    String msg = Serial.readString();
+    Serial.print(msg +  "over");
 
 
     digitalWrite(8,LOW);
 
     if(isReceiving){
         digitalWrite(8,HIGH);
+        memo += msg;
     }
 
     if( msg == "done"){
@@ -75,6 +76,10 @@ void loop(){
 
     if( msg == "sending"){
         isReceiving = true;
+    }
+
+    if( msg == "read"){
+        Serial.print("inMemory:" + memo + "over");
     }
     
 }
@@ -96,5 +101,5 @@ void performAction(unsigned long duration){ //perform action based on duration o
 }
 
 void receiveList(){
-    Serial.print("gettabs");
+    Serial.print("gettabsover");
 }
