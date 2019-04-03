@@ -94,7 +94,17 @@ while 1:
         for s in inputTest:
             msgToBeSent.append(s)
         msgToBeSent.append('done')
-        msgToBeSent.append('read')
+
+    if "opentabs" in str(a):
+        ser.write(bytes(str('read').encode("ascii")))
+
+    if "inMemory:" in str(a):
+            print('Got the list')
+            b = str(str(a).partition('inMemory:')[2])
+            print(b)
+            b = str(b.partition('||')[0])
+            print(b)
+            x = openTab([n for n in b.split(' ') if n != ''])
 
 
     if msgToBeSent == []:

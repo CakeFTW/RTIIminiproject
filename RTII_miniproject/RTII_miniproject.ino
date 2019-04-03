@@ -67,15 +67,17 @@ void loop(){
 
     digitalWrite(8,LOW);
 
-    if(isReceiving){
-        digitalWrite(8,HIGH);
-        memo += msg;
-    }
+
 
     if( msg == "done"){
         isReceiving = false;
-        writeString(10,memo);
+        writeString(10,memo + ' ');
         memo = "";
+    }
+
+    if(isReceiving){
+        digitalWrite(8,HIGH);
+        memo += msg + ' ';
     }
 
     if( msg == "sending"){
@@ -85,7 +87,7 @@ void loop(){
     if( msg == "read"){
         String stringToSend;
         stringToSend = read_String(10);
-        Serial.print("inMemory:" + stringToSend + "over");
+        Serial.print("inMemory:" + stringToSend + "||over");
     }
     
 }
@@ -98,11 +100,13 @@ void led(int state){
 }
 
 void performAction(unsigned long duration){ //perform action based on duration of press
-    if(duration> 200 && duration < 600){
+    if(duration> 200 && duration < 1000){
         digitalWrite(8, HIGH);
+        openTabs();
     }else if(duration > 1500){
         digitalWrite(9,HIGH);
-        receiveList();
+        openTabs();
+        //receiveList();
     }
 }
 
@@ -110,15 +114,19 @@ void receiveList(){
     Serial.print("gettabsover");
 }
 
+void openTabs(){
+    Serial.print("opentabsover");
+}
+
 void writeString(char add,String data)
 {
-  int _size = data.length();
-  int i;
-  for(i=0;i<_size;i++)
-  {
-    EEPROM.write(add+i,data[i]);
-  }
-  EEPROM.write(add+_size,'\0');   //Add termination null character for String Data
+    int _size = data.length();
+    int i;
+    for(i=0;i<_size;i++)
+    {
+        EEPROM.write(add+i,data[i]);
+    }
+    EEPROM.write(add+_size,'\0');   //Add termination null character for String Data
 }
  
  
