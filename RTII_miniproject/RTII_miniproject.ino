@@ -12,10 +12,12 @@
 
 //pin
 CapacitiveSensor cs = CapacitiveSensor(2,4);
-int i = 0;
 String memo = "";
 //declaration of variables
 unsigned long timeOfPress = 0;
+
+unsigned long timeOfLastIr = 0;
+
 bool wasPressed = false;
 
 bool isReceiving = false;
@@ -33,22 +35,21 @@ void setup(){
 
 void loop(){
     //reset variabels
-    i++;
-    //Serial.print(String(i) + " - ");
     ledState = 0;
     bool isPressed = false;
 
 
-    long capReading = cs.capacitiveSensor(30);
+    long capReading = cs.capacitiveSensor(15);
     unsigned long time = millis();
+    Serial.println(time - timeOfLastIr);
+    timeOfLastIr = time;
 
-    
-
+ 
     if(capReading > 1000){// if being pressed, turn on the light
         ledState = 1;
         isPressed = true;
     }
-
+    
     if(isPressed == true && wasPressed == false){//if being pressed for the first time
         timeOfPress = time;
     }
@@ -62,33 +63,34 @@ void loop(){
     wasPressed = isPressed;
 
     String msg = Serial.readString();
-    Serial.print(msg +  "over");
 
+    // if(msg != ""){
+    //     sendMsg(msg); //if a message was received echo it back
+        
+    //     //use an LED to indicate if it is receiving 
+    //     if(isReceiving){
+    //         digitalWrite(8,HIGH);
+    //         memo += msg + ' ';
+    //     }else{
+    //         digitalWrite(8,LOW); 
+    //     }
+    // }
 
-    digitalWrite(8,LOW);
+    // if( msg == "done"){ //if we receive "done" stop saving mesages and save list of msg in EEPROM memory
+    //     isReceiving = false;
+    //     writeString(10,memo + ' ');
+    //     memo = "";
+    // }
 
+    // if( msg == "sending"){  //sending indicates that we should save the next msg's in memory
+    //     isReceiving = true;
+    // }
 
-
-    if( msg == "done"){
-        isReceiving = false;
-        writeString(10,memo + ' ');
-        memo = "";
-    }
-
-    if(isReceiving){
-        digitalWrite(8,HIGH);
-        memo += msg + ' ';
-    }
-
-    if( msg == "sending"){
-        isReceiving = true;
-    }
-
-    if( msg == "read"){
-        String stringToSend;
-        stringToSend = read_String(10);
-        Serial.print("inMemory:" + stringToSend + "||over");
-    }
+    // if( msg == "read"){ //read means that we should send the saved list of open tabs to python
+    //     String stringToSend;
+    //     stringToSend = read_String(10);
+    //     sendMsg("inMemory:" + stringToSend + "||");
+    // }
     
 }
 
@@ -111,11 +113,11 @@ void performAction(unsigned long duration){ //perform action based on duration o
 }
 
 void receiveList(){
-    Serial.print("gettabsover");
+    sendMsg("gettabs");
 }
 
 void openTabs(){
-    Serial.print("opentabsover");
+    sendMsg("opentabs");
 }
 
 void writeString(char add,String data)
@@ -145,4 +147,8 @@ String read_String(char add)
   }
   data[len]='\0';
   return String(data);
+}
+
+void sendMsg(String msgToSend){
+    Serial.print(msgToSend + "over");
 }
