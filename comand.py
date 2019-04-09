@@ -44,7 +44,6 @@ def getListOfTabs():
         i += 1
         print(a)
 
-
     #open google chrome
     py.keyDown("alt")
     py.press("tab")
@@ -52,14 +51,12 @@ def getListOfTabs():
 
     py.moveTo(screenWidth*0.5,68) #place cursor on adress bar
 
-
-
-    for a in range(15):
+    for a in range(100):
         for _ in range(2):
             py.click()
-            py.keyDown("ctrl")
+            py.keyDown("ctrl",_pause=False)
             py.press(["a","c","tab"])
-            py.keyUp("ctrl")
+            py.keyUp("ctrl",pause=False)
             win32clipboard.OpenClipboard()
             tabs.append(win32clipboard.GetClipboardData())
             win32clipboard.CloseClipboard()
@@ -83,15 +80,16 @@ doneSending = False
 msgToBeSent = []
 
 while 1:
-    a = ser.read_until(b'over').decode()
+    a = ser.read_until(b'\n').decode()
     if(a != ""):
         print("Received : " + a)
     
     if "gettabs" in str(a):
+        listOfTabs = getListOfTabs()
         msgToBeSent.append('sending')
         ser.write(bytes(str(msgToBeSent[0]).encode("ascii")))
         print("begining to send")
-        for s in inputTest:
+        for s in listOfTabs:
             msgToBeSent.append(s)
         msgToBeSent.append('done')
 
@@ -99,12 +97,13 @@ while 1:
         ser.write(bytes(str('read').encode("ascii")))
 
     if "inMemory:" in str(a):
-            print('Got the list')
-            b = str(str(a).partition('inMemory:')[2])
-            print(b)
-            b = str(b.partition('||')[0])
-            print(b)
-            x = openTab([n for n in b.split(' ') if n != ''])
+        print('Got the list')
+        b = str(str(a).partition('inMemory:')[2])
+        print(b)
+        b = str(b.partition('||')[0])
+        print(b)
+        x = openTab([n for n in b.split(' ') if n != ''])
+
 
 
     if msgToBeSent == []:
