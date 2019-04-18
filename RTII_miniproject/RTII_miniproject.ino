@@ -7,32 +7,41 @@
 #include <CapacitiveSensor.h> // to use pins as capacitative touch sensors
 #include <EEPROM.h>
 #include <string.h>
-char data[500];
-int currentIndex = 0;
 
-//pin
+
+//general
+unsigned long timeOfLastIr = 0;     //  used for debuging
+char data[500];             //hold mesages until they are writen to memory
+int currentIndex = 0;       //where to in data to write the new msg
+
+//variabels for cap sensor
 CapacitiveSensor cs = CapacitiveSensor(2,4);
-String memo = "";
-//declaration of variables
-unsigned long timeOfPress = 0;
-unsigned long timeOfLastIr = 0;
-unsigned long timeOfLastPress = 0;
+#define CAP_THRESHOLD 50            //threshold above which the capacitiveSensor is considered held down
+unsigned long timeOfPress = 0;      //used to check how long the capacitiveSensor was held
+unsigned long timeOfLastPress = 0;  //used to check for double clicks
+bool wasPressed = false;   //if the button cap sensor was pressed at the last reading (used to detect the finger lifting)
 
-bool wasPressed = false;
+//variables for serial msaging  
+bool isReceiving = false;   //controls if the received msg should be saved in memory (set true when reciving a "sending"msg)
+bool sensorWorking = true;  //controls if device should read from sensor or look/send msg on serial
 
-bool isReceiving = false;
+//variables for knock detection with peizo
+#define KNOCK_THRESHOLD = 50    
+#define piezoPin = A0
 
-bool sensorWorking = true;
+
 
 //led variables
 int ledState = 0;   // the led starts in no state
 int ledPin = 5;     //pin the led is attached to
+
 
 void setup(){
     Serial.begin(9600);
     pinMode(ledPin, OUTPUT);
     pinMode(8, OUTPUT);
     pinMode(9, OUTPUT);
+    pinMode(piezoPin, INPUT);
 }
 
 void loop(){
@@ -41,12 +50,14 @@ void loop(){
     bool isPressed = false;
 
     unsigned long time = millis();
+    Serial.print(analogRead(piezoPin));
+    Serial.println(" : " + String(time-timeOfLastIr));
     timeOfLastIr = time;
 
     if(sensorWorking){
-        long capReading = cs.capacitiveSensor(10);
+        long capReading = cs.capacitiveSensor();
         //Serial.println("    Reading : " + String(capReading));
-        if(capReading > 50){// if being pressed, turn on the light
+        if(capReading > CAP_THRESHOLD){// if being pressed, turn on the light
             ledState = 1;
             isPressed = true;
         }
@@ -56,7 +67,7 @@ void loop(){
         }
 
         if(wasPressed == true && isPressed == false){ //if user let go
-            performAction(time - timeOfPress);
+            //performAction(time - timeOfPress);
         }
 
         led(ledState); //set the led to active pattern
@@ -102,6 +113,7 @@ void loop(){
                 sendMsgNoEnd(String(data));
                 sendMsg("||");
                 sensorWorking = true;
+                closeConnection();
             }
         }
     }
@@ -128,12 +140,12 @@ void performAction(unsigned long duration){ //perform action based on duration o
 }
 
 void receiveList(){
-    sendMsg("gettabs");
+    sendMsg("gettabs:");
     sensorWorking = false;
 }
 
 void openTabs(){
-    sendMsg("opentabs");
+    sendMsg("opentabs:");
     sensorWorking = false;
 }
 
@@ -171,4 +183,8 @@ void sendMsg(String msgToSend){
 
 void sendMsgNoEnd(String msgToSend){
     Serial.print(msgToSend);
+}
+
+void closeConnection(){
+    sendMsg("close:");
 }

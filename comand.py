@@ -5,6 +5,7 @@
 #the computer side program
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
+import webbrowser as wb
 import time
 import pyautogui as py
 import math
@@ -14,16 +15,18 @@ import serial
 
 
 
-def openTab(input = ""): #open all tabs passed to the function
-    driver = webdriver.Chrome() #could be made faster i think
+# def openTab(input = ""): #open all tabs passed to the function
+#     driver = webdriver.Chrome() #could be made faster i think
 
-    for s in input: 
-        driver.execute_script("window.open('"+s+"');")
+#     for s in input: 
+#         driver.execute_script("window.open('"+s+"');")
 
-    driver.switch_to_window(driver.window_handles[0])
-    driver.close()
-    return driver
-
+#     driver.switch_to_window(driver.window_handles[0])
+#     driver.close()
+#     return driver
+def openTab(input = ""):
+    for s in input:
+        wb.open_new(s)
 
 def getListOfTabs():
     screenWidth, screenHeight = py.size()
@@ -84,7 +87,7 @@ while 1:
     if(a != ""):
         print("Received : " + a)
     
-    if "gettabs" in str(a):
+    if "gettabs:" in str(a):
         listOfTabs = getListOfTabs()
         msgToBeSent.append('sending')
         ser.write(bytes(str(msgToBeSent[0]).encode("ascii")))
@@ -93,7 +96,7 @@ while 1:
             msgToBeSent.append(s)
         msgToBeSent.append('done')
 
-    if "opentabs" in str(a):
+    if "opentabs:" in str(a):
         ser.write(bytes(str('read').encode("ascii")))
 
     if "inMemory:" in str(a):
@@ -104,7 +107,9 @@ while 1:
         print(b)
         x = openTab([n for n in b.split(' ') if n != ''])
 
-
+    if "close:" in str(a):
+        ser.close()
+        break
 
     if msgToBeSent == []:
         continue
@@ -121,7 +126,8 @@ while 1:
         print("did not find " + str(msgToBeSent[0]) + " in " + str(a))
 
 
-
+del(ser)
+print("closing connection")
 
 
 
