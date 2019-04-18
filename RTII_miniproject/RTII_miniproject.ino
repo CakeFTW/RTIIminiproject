@@ -26,9 +26,9 @@ bool isReceiving = false;   //controls if the received msg should be saved in me
 bool sensorWorking = true;  //controls if device should read from sensor or look/send msg on serial
 
 //variables for knock detection with peizo
-#define KNOCK_THRESHOLD = 50    
-#define piezoPin = A0
-
+#define KNOCK_THRESHOLD 65
+#define piezoPin A0
+unsigned long timeOfLastKnock = 0;
 
 
 //led variables
@@ -50,12 +50,10 @@ void loop(){
     bool isPressed = false;
 
     unsigned long time = millis();
-    Serial.print(analogRead(piezoPin));
-    Serial.println(" : " + String(time-timeOfLastIr));
-    timeOfLastIr = time;
+
 
     if(sensorWorking){
-        long capReading = cs.capacitiveSensor();
+        long capReading = cs.capacitiveSensor(10);
         //Serial.println("    Reading : " + String(capReading));
         if(capReading > CAP_THRESHOLD){// if being pressed, turn on the light
             ledState = 1;
@@ -67,12 +65,22 @@ void loop(){
         }
 
         if(wasPressed == true && isPressed == false){ //if user let go
-            //performAction(time - timeOfPress);
+            performAction(time - timeOfPress);
         }
 
         led(ledState); //set the led to active pattern
 
         wasPressed = isPressed;
+
+        if(analogRead(piezoPin)> KNOCK_THRESHOLD){
+            if((timeOfLastKnock - time)> 200){
+                closeConnection();
+            }
+            timeOfLastKnock = time;
+            while(analogRead(piezoPin)> KNOCK_THRESHOLD){
+               // Serial.println(" : " + String(millis()-timeOfLastIr));
+            }
+        }
 
     }else{
 
@@ -113,10 +121,12 @@ void loop(){
                 sendMsgNoEnd(String(data));
                 sendMsg("||");
                 sensorWorking = true;
-                closeConnection();
+                //closeConnection();
             }
         }
     }
+
+    timeOfLastIr = time;
 }
 
 void led(int state){
