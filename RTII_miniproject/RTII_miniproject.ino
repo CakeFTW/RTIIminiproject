@@ -11,7 +11,7 @@
 
 //general
 unsigned long timeOfLastIr = 0;     //  used for debuging
-char data[500];             //hold mesages until they are writen to memory
+char data[1024];             //hold mesages until they are writen to memory
 int currentIndex = 0;       //where to in data to write the new msg
 
 //variabels for cap sensor
@@ -26,7 +26,7 @@ bool isReceiving = false;   //controls if the received msg should be saved in me
 bool sensorWorking = true;  //controls if device should read from sensor or look/send msg on serial
 
 //variables for knock detection with peizo
-#define KNOCK_THRESHOLD 65
+#define KNOCK_THRESHOLD 20
 #define piezoPin A0
 unsigned long timeOfLastKnock = 0;
 
@@ -73,7 +73,7 @@ void loop(){
         wasPressed = isPressed;
 
         if(analogRead(piezoPin)> KNOCK_THRESHOLD){
-            if((timeOfLastKnock - time)> 200){
+            if((time - timeOfLastKnock)> 200 && (time - timeOfLastKnock) < 1200){
                 closeConnection();
             }
             timeOfLastKnock = time;
@@ -99,14 +99,24 @@ void loop(){
 
             //use an LED to indicate if it is receiving 
             if(isReceiving){
-                digitalWrite(8,HIGH);
-                int msgSize = msg.length();//to avoid the ending char 
-                //read the data into the preassigned char array
-                for(int i = 0; i < msgSize; i++){
-                    data[i+currentIndex] = msg[i];
+                if(msg == "error"){
+                    for(int i ; i > 1024; i++){
+                        data[i] = ' ';
+                    }
+                    sendMsg("arrclr");
+                    currentIndex = 0;
                 }
-                currentIndex += msgSize; // get new index postion
-                data[currentIndex++] = ' ';
+                else
+                {
+                    digitalWrite(8,HIGH);
+                    int msgSize = msg.length();//to avoid the ending char 
+                    //read the data into the preassigned char array
+                    for(int i = 0; i < msgSize; i++){
+                        data[i+currentIndex] = msg[i];
+                    }
+                    currentIndex += msgSize; // get new index postion
+                }
+
             }else{
                 digitalWrite(8,LOW); 
             }
@@ -137,12 +147,13 @@ void led(int state){
 }
 
 void performAction(unsigned long duration){ //perform action based on duration of press
-    if(duration> 100 && duration < 1000){
-        if(millis() - timeOfLastPress < 1000){
+    if(duration> 50 && duration < 1000){
+        long timeSinceLastPress = (millis() - timeOfLastPress);
+        if( timeSinceLastPress < 1000 && timeSinceLastPress > 200 ){
             openTabs();
         }
 
-    }else if(duration > 1500){
+    }else if(duration > 1000 && duration < 2000){
         digitalWrite(9,HIGH);
         receiveList();
     }
@@ -159,7 +170,7 @@ void openTabs(){
     sensorWorking = false;
 }
 
-void write_data(char add, char data[500], int size)
+void write_data(char add, char data[1024], int size)
 {
     int i;
     for(i=0;i < size;i++)
@@ -175,7 +186,7 @@ void read_data(char add)
     int len=0;
     unsigned char k;
     k=EEPROM.read(add);
-    while(len<500)   //Read until null character
+    while(len<1024)   //Read until null character
     {    
         k=EEPROM.read(add+len);
         if(k == '\0'){

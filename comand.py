@@ -67,6 +67,8 @@ ser.baudrate = 9600
 ser.port = 'COM240'
 ser.open()
 
+err_checking = False
+
 msgToBeSent = [] # a queue of mesages to be sent
 #the program waits for the arduino to send back return mesages to confirm that they have been sent correctly
 
@@ -77,13 +79,24 @@ while 1:
     
     if "gettabs:" in str(a):    #gettabs asks us to send the current google chrome tabs to the arduino
         listOfTabs = getListOfTabs()
+        
+        msg = '||'
+        for s in listOfTabs:    #then add all the other tabs the sending stacj
+            msg += s + " ";
+            print(msg)
+        if len(msg) > 1023:
+            print("list of tabs too long")
+            continue
+
         msgToBeSent.append('sending')   #"sending" tells the arduino to be prepared to save the mesages it receives
         ser.write(bytes(str(msgToBeSent[0]).encode("ascii")))   #send first mesages
         print("begining to send")
-        for s in listOfTabs:    #then add all the other tabs the sending stacj
-            msgToBeSent.append(s)
+        msgToBeSent.append(msg)
         msgToBeSent.append('done')  #finally add "done" to the sending queue, 
         #this tell the arduino to save the mesages to eeprom memory
+
+    if "arrclr" in str(a): #opentab tell the arduino want to send a list of tabs to open
+        ser.write(bytes(str(msgToBeSent[0]).encode("ascii")))
 
     if "opentabs:" in str(a): #opentab tell the arduino want to send a list of tabs to open
         ser.write(bytes(str('read').encode("ascii")))   #send the message read to confirm we are ready
@@ -105,14 +118,23 @@ while 1:
 
     if msgToBeSent[0] in str(a):    #if the mesage we got back is the same as the message we just sent, send the next one
         msgToBeSent.pop(0)
+        if err_checking:
+            err_checking = False
         
         if(msgToBeSent == []):
             continue
+
+        if '||' in msgToBeSent[0]:
+            msgToBeSent[0] = msgToBeSent[0].partition('||')[2]
+            err_checking = True
 
         ser.write(bytes(str(msgToBeSent[0]).encode("ascii")))
         print("sent the message" + str(msgToBeSent[0]))
     else :
         print("did not find " + str(msgToBeSent[0]) + " in " + str(a))
+        if err_checking:
+            ser.write(bytes(str('error').encode("ascii")))
+        
 
 #once done, just do a simple clean up
 del(ser)
